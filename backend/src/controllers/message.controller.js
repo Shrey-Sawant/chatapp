@@ -1,8 +1,10 @@
-import { asyncHandler } from "../utils/asyncHandler";
-import User from "../models/user.model";
-import Message from "../models/message.model";
-import { ApiResponse } from "../utils/ApiRespones";
-import { ApiError } from "../utils/ApiError";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from "../models/user.model.js";
+import Message from "../models/message.model.js";
+import { ApiResponse } from "../utils/ApiRespones.js";
+import { ApiError } from "../utils/ApiError.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { getReceiverSocketId, io } from "../app.js";
 
 const getUserForSideBar = asyncHandler(async (req, res) => {
     const loogedInUserId = req.user?._id;
@@ -19,46 +21,89 @@ const getMessages = asyncHandler(async (req, res) => {
 
     const messages = await Message.find({
         $or: [
-            { sender: loogedInUserId, receiver: id },
-            { sender: id, receiver: loogedInUserId }
+            { senderId: loogedInUserId, receiverId: id },
+            { senderId: id, receiverId: loogedInUserId }
         ]
     }).sort({ createdAt: 1 });
 
-    if (!messages) return next(new ApiError(404, 'No messages found'));
+    if (!messages) {
+        console.log("No messages found for the given criteria");
+        return next(new ApiError(404, 'No messages found'));
+    }
 
     return res.status(200).json(new ApiResponse(200, messages, 'Messages fetched successfully'));
 });
 
-const sendMessage = asyncHandler(async (req, res) => {
+const sendMessage = asyncHandler(async (req, res, next) => {
     const { text } = req.body;
-    const { imagesPath } = req.files?.path;
-    const images = [];
-    const { receiverId } = req.params;
+    const receiverId = req.params.id;
     const senderId = req.user?._id;
 
-    if (imagesPath) {
-        imagesPath.map(async (image) => {
-            const imageLink = await uploadOnCloudinary(image);
+    // Debugging logs
+    console.log("Request body:", text);
 
-            if (!imageLink) return next(new ApiError(400, 'Image not uploaded'));
+    let imagesPaths = [];
 
-            images.push(imageLink);
+    // Handle both array and single file cases
+    if (req.files?.pictures) {
+        const files = Array.isArray(req.files.pictures)
+            ? req.files.pictures
+            : [req.files.pictures];
+        console.log("FIles:",files);
+        imagesPaths = files.map(file => {
+            if (!file.path) {
+                throw new ApiError(400, "Invalid file format received");
+            }
+            return file.path;
         });
     }
 
-    const newMessage = new Message({
-        senderId,
-        receiverId,
-        text,
-        images,
-    });
+    console.log(imagesPaths);
+    // Validate at least one content exists
+    if (!text && imagesPaths.length === 0) {
+        return next(new ApiError(400, "Message must contain text or an image"));
+    }
 
-    await newMessage.save();
+    // Upload images if any
+    let images = [];
+    if (imagesPaths.length > 0) {
+        try {
+            images = await Promise.all(
+                imagesPaths.map(async (path) => {
+                    const photo = await uploadOnCloudinary(path);
+                    if (!photo?.secure_url) {
+                        throw new ApiError(500, "Error uploading file to cloud");
+                    }
+                    return photo.secure_url;
+                })
+            );
+        } catch (uploadError) {
+            return next(uploadError);
+        }
+    }
 
-    if (!newMessage) return next(new ApiError(400, 'Message not sent'));
+    // Create message
+    try {
+        const newMessage = await Message.create({
+            senderId,
+            receiverId,
+            text: text,
+            images
+        });
 
-    return res.status(200).json(new ApiResponse(200, newMessage, 'Message sent successfully'));
+        // Socket.io notification
+        const receiverSocketId = getReceiverSocketId(receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("newMessage", newMessage);
+        }
 
+        return res.status(201).json(
+            new ApiResponse(200, newMessage, "Message sent successfully")
+        );
+
+    } catch (dbError) {
+        return next(new ApiError(500, "Failed to save message to database"));
+    }
 });
 
 export { getUserForSideBar, getMessages, sendMessage };

@@ -15,22 +15,22 @@ cloudinary.config({
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
-    try {
-        if (!localFilePath) return null;
+  try {
+      if (!localFilePath) return null;
 
-        const fileName = path.basename(localFilePath,path.extname(localFilePath))
-        const response = await cloudinary.uploader.upload(localFilePath, {
-            public_id: fileName, 
-            overwrite: true,
-            resource_type: "auto",
-        });
+      const fileName = path.basename(localFilePath,path.extname(localFilePath))
+      const response = await cloudinary.uploader.upload(localFilePath, {
+          public_id: fileName, 
+          overwrite: true,
+          resource_type: "auto",
+      });
 
-         fs.unlinkSync(localFilePath);
-        return response;
-    } catch (error) {
-        fs.unlinkSync(localFilePath)
-        return null;
-    }
+       fs.unlinkSync(localFilePath);
+      return response;
+  } catch (error) {
+      fs.unlinkSync(localFilePath)
+      return null;
+  }
 }
 
 const downloadFromCloudinary = async (cloudinaryUrl, downloadDir = 'C:/Downloads') => {

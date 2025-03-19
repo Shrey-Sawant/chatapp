@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
-import { app } from "./app.js";
+import { app, server } from "./app.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import express from "express";
@@ -17,7 +17,7 @@ app.use(cookieParser());
 
 connectDB()
     .then(() => {
-        app.listen(8000, () => {
+        server.listen(8000, () => {
             console.log("Connected!!!")
         })
     })

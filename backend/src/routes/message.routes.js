@@ -1,11 +1,12 @@
 import express from 'express';
-import { verfiyJwt } from '../middlewares/authLogin.middleware';
-import { getUserForSideBar,getMessages,sendMessage } from '../controllers/message.controller';
+import { verifyJWT } from '../middlewares/authLogin.middleware.js';
+import { getUserForSideBar, getMessages, sendMessage } from '../controllers/message.controller.js';
+import { upload } from '../middlewares/multer.middleware.js';
 
-const router=express.Router();
+const router = express.Router();
 
-router.route('/users').get(verfiyJwt,getUserForSideBar);
-router.route('/:id').get(verfiyJwt,getMessages);
-router.route('/send/:id').post(verfiyJwt,upload.array("pictures",30),sendMessage);
+router.route('/users').get(verifyJWT, getUserForSideBar);
+router.route('/:id').get(verifyJWT, getMessages);
+router.route('/send/:id').post(verifyJWT, upload.fields([{ name: "pictures", maxCount: 30 }]), sendMessage);
 
 export default router;
