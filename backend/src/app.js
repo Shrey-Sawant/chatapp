@@ -46,7 +46,8 @@ app.use(cors({
         "https://chatapp-kohl-kappa.vercel.app"
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"], credentials: true
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
 }));
 
 app.use(express.json({ limit: "16kb" }))
