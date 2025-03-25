@@ -57,6 +57,7 @@ const signup = asyncHandler(async (req, res, next) => {
 const login = asyncHandler(async (req, res, next) => {
     const { email, password } = req.body;
 
+    console.log("Login request received:", { email, password });
     const user = await User.findOne({ email });
 
     if (!user) {
