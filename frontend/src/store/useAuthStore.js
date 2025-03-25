@@ -30,7 +30,9 @@ export const useAuthStore = create((set, get) => ({
         set({ isSigningUp: true });
 
         try {
-            const response = await axiosInstance.post("/auth/signup", data);
+            const response = await axiosInstance.post("/auth/signup", data,   { headers: {
+                "Content-Type": "application/json", // Explicitly set JSON
+              },});
             console.log(response.data.data);
             set({ authUser: response.data.data });
             toast.success("Account created successfully");
@@ -46,7 +48,9 @@ export const useAuthStore = create((set, get) => ({
         set({ isLoggingIn: true });
         try {
             console.log(data);
-            const response = await axiosInstance.post("/auth/login", data);
+            const response = await axiosInstance.post("/auth/login", data,   { headers: {
+                "Content-Type": "application/json", // Explicitly set JSON
+              },});
             console.log(response.data);
             set({ authUser: response.data.data });
             toast.success("Logged in successfully");
@@ -95,7 +99,9 @@ export const useAuthStore = create((set, get) => ({
             query: {
                 userId: authUser._id,
             },
-        });
+        },   { headers: {
+            "Content-Type": "application/json", // Explicitly set JSON
+          },});
         socket.connect();
 
         set({ socket: socket });
