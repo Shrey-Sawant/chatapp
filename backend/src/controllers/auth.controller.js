@@ -42,12 +42,12 @@ const signup = asyncHandler(async (req, res, next) => {
         await newUser.save();
         console.log("New user saved:", newUser);
 
-        return res.status(201).json(new ApiResponse(201, { 
-            _id: newUser._id, 
-            fullName, 
-            email, 
-            profilePic: newUser.profilePic 
-        },"User created successfully"));
+        return res.status(201).json(new ApiResponse(201, {
+            _id: newUser._id,
+            fullName,
+            email,
+            profilePic: newUser.profilePic
+        }, "User created successfully"));
     } else {
         console.log("User creation failed");
         return next(new ApiError(400, "User not created"));
@@ -72,7 +72,7 @@ const login = asyncHandler(async (req, res, next) => {
 
     generateToken(user._id, res);
 
-    res.status(200).json(new ApiResponse(200, { _id: user._id, fullName: user.fullName, email, profilePic: user.profilePic },"Login successful"));
+    res.status(200).json(new ApiResponse(200, { _id: user._id, fullName: user.fullName, email, profilePic: user.profilePic }, "Login successful"));
 });
 
 const logout = asyncHandler(async (req, res, next) => {
@@ -84,7 +84,7 @@ const logout = asyncHandler(async (req, res, next) => {
 });
 
 const updateProfile = asyncHandler(async (req, res, next) => {
-    const  profilePicFilePath  = req.file?.path;
+    const profilePicFilePath = req.file?.path;
     const userId = req.user._id;
 
     if (!profilePicFilePath) {
