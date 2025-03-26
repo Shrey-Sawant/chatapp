@@ -1,7 +1,7 @@
 import express from 'express';
 import { verifyJWT } from '../middlewares/authLogin.middleware.js';
 import { getUserForSideBar, getMessages, sendMessage } from '../controllers/message.controller.js';
-import  upload  from '../middlewares/multer.middleware.js';
+import { upload } from '../middlewares/multer.middleware.js';
 
 const router = express.Router();
 
