@@ -81,7 +81,6 @@ export const useAuthStore = create((set, get) => ({
             const response = await axiosInstance.put("/auth/update-profile", data, {headers : {
                 "Content-Type": "multipart/form-data",
             }});
-            console.log(response.data.data);
             set({ authUser: response.data.data });
             toast.success("Profile updated successfully");
         } catch (error) {
