@@ -15,9 +15,10 @@ const Sidebar = () => {
     }, [getUsers])
 
 
-    const filteredUsers = showOnlineOnly ? users.filter(user => onlineUsers.includes(user._id)) : users;
+    const filteredUsers = showOnlineOnly ? users.filter((user) => onlineUsers.includes(user._id)) : users;
 
     if (isUsersLoading) return <SidebarSkeleton />
+    
     return (
         <aside className='h-full w-1/4 md:42 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200'>
             <div className='border-b border-base-300 w-full p-5'>
