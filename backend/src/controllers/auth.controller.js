@@ -100,7 +100,7 @@ const updateProfile = asyncHandler(async (req, res, next) => {
         { profilePic: profilePic.secure_url }, 
         { new: true }
     ).select("-password");
-
+    console.log(user);
     if (!user) {
         return next(new ApiError(404, "User not found"));
     }
