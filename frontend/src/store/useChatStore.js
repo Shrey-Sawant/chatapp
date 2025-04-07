@@ -33,7 +33,7 @@ export const useChatStore = create((set, get) => ({
         try {
             const res = await axiosInstance.get(`/messages/${userId}`, {
                 headers: {
-                    "Content-Type": "application/json", // Explicitly set JSON
+                    "Content-Type": "application/json", 
                 },
             });
             set({ messages: res.data.data })
