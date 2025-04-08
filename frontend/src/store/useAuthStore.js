@@ -94,21 +94,27 @@ export const useAuthStore = create((set, get) => ({
     connectSocket: () => {
         const { authUser } = get();
         if (!authUser || get().socket?.connected) return;
-
+    
         const socket = io(import.meta.env.VITE_BACKEND_URL, {
-            query: {
+            auth: {
                 userId: authUser._id,
             },
-        },   { headers: {
-            "Content-Type": "application/json", // Explicitly set JSON
-          },});
-        socket.connect();
+            transports: ["websocket"], 
+            extraHeaders: {
+                "Content-Type": "application/json",
+            },
+        });
+    
+        socket.on("connect", () => {
+            console.log("Socket connected", socket);
+            set({ socket: socket });
+        });
         console.log("Socket connected", socket);
-        set({ socket: socket });
         socket.on("getOnlineUsers", (userIds) => {
             set({ onlineUsers: userIds });
-        })
+        });
     },
+    
 
     disconnectSocket: () => {
         if (get().socket?.connected) get().socket.disconnect();
