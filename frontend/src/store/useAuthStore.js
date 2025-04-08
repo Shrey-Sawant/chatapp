@@ -103,7 +103,7 @@ export const useAuthStore = create((set, get) => ({
             "Content-Type": "application/json", // Explicitly set JSON
           },});
         socket.connect();
-
+        console.log("Socket connected", socket.id);
         set({ socket: socket });
         socket.on("getOnlineUsers", (userIds) => {
             set({ onlineUsers: userIds });
