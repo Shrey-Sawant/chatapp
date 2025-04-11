@@ -19,6 +19,7 @@ const App = () => {
 
   useEffect(() => {
     console.log("Checking authentication...");
+    console.log("Online users: ", onlineUsers);
     checkAuth();
   }, [checkAuth]);
 

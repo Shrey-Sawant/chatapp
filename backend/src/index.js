@@ -1,23 +1,12 @@
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
-import { app, server } from "./app.js";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import express from "express";
+import { server } from "./app.js";
 
 dotenv.config();
 
-app.use(cors({
-    origin: "*",
-    credentials: true
-}));
-
-app.use(express.json());
-app.use(cookieParser());
-
 connectDB()
     .then(() => {
-        server.listen(8000, () => {
+        server.listen(8001, () => {
             console.log("Connected!!!")
         })
     })

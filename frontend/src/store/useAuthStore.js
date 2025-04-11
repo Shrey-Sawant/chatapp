@@ -49,15 +49,14 @@ export const useAuthStore = create((set, get) => ({
         try {
             console.log(data);
             const response = await axiosInstance.post("/auth/login", data,   { headers: {
-                "Content-Type": "application/json", // Explicitly set JSON
+                "Content-Type": "application/json", 
               },});
-            console.log(response.data);
             set({ authUser: response.data.data });
             toast.success("Logged in successfully");
 
             get().connectSocket();
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.response.data.data.message);
         } finally {
             set({ isLoggingIn: false });
         }
@@ -96,23 +95,20 @@ export const useAuthStore = create((set, get) => ({
         if (!authUser || get().socket?.connected) return;
     
         const socket = io(import.meta.env.VITE_BACKEND_URL, {
-            auth: {
-                userId: authUser._id,
-            },
+          query: {
+            userId: authUser._id,
+          },
         });
+        socket.connect();
     
-        socket.on("connect", () => {
-            console.log("Socket connected", socket);
-            set({ socket: socket });
-        });
-       
+        set({ socket: socket });
+    
         socket.on("getOnlineUsers", (userIds) => {
-            console.log("Online users", userIds);
-            set({ onlineUsers: userIds });
+          set({ onlineUsers: userIds });
         });
-    },
-    
-    disconnectSocket: () => {
+      },
+
+      disconnectSocket: () => {
         if (get().socket?.connected) get().socket.disconnect();
-    },
+      },
 }));

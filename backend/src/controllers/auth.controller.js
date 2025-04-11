@@ -62,7 +62,7 @@ const login = asyncHandler(async (req, res, next) => {
 
     generateToken(user._id, res);
 
-    res.status(200).json(new ApiResponse(200, { 
+    return res.status(200).json(new ApiResponse(200, { 
         _id: user._id, 
         fullName: user.fullName, 
         email, 
