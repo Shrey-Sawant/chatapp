@@ -37,9 +37,6 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div className="form-control">
-              <a href="tel:9372297668">
-        Call to GeeksforGeeks support
-    </a>
               <label className="label">
                 <span className="label-text font-medium">Email</span>
               </label>
