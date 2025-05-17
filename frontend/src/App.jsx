@@ -12,7 +12,6 @@ import { useAuthStore } from './store/useAuthStore';
 import { Loader } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import { useThemeStore } from './store/useThemeStore';
-import CallPage from './pages/CallPage';
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth, onlineUsers} = useAuthStore();
@@ -43,7 +42,6 @@ const App = () => {
         <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
-        <Route path="/video-call/:userId" element={authUser ? <CallPage /> : <Navigate to="/login" />} />
       </Routes>
 
       <Toaster />
