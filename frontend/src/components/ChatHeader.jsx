@@ -3,11 +3,13 @@ import { X } from 'lucide-react'
 import { VideoIcon } from 'lucide-react';
 import { useChatStore } from '../store/useChatStore'
 import { useAuthStore } from '../store/useAuthStore';
+import { useCallStore } from '../store/useCallStore';
 import { useNavigate } from 'react-router-dom'
 
 const ChatHeader = () => {
     const { selectedUser, setSelectedUser } = useChatStore();
     const { onlineUsers } = useAuthStore();
+    const { initiateCall } = useCallStore();
     const navigate = useNavigate();
     return (
         <div className='p-2.5 border-b border-base-300'>
@@ -31,7 +33,7 @@ const ChatHeader = () => {
                 
                 <div className='flex items-center gap-5'>
                 {/* Video Call Button */}
-                <button className='btn btn-ghost btn-circle' onClick={() =>navigate(`/video-call/${selectedUser._id}`)}> 
+                <button className='btn btn-ghost btn-circle' onClick={() =>{initiateCall(selectedUser._id, selectedUser.roomId); navigate("/video-call")}}> 
                     <VideoIcon className='w-5 h-5' />
                 </button>
                 {/* Close Button */}
