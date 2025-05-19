@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
-import Peer from "peerjs";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -12,8 +11,6 @@ export const useAuthStore = create((set, get) => ({
   isCheckingAuth: true,
   onlineUsers: [],
   socket: null,
-  peer: null,
-  peerId: null,
 
   checkAuth: async () => {
     try {
@@ -75,7 +72,6 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: null });
       toast.success("Logged out successfully");
       get().disconnectSocket();
-      get().disconnectPeer();
     } catch (error) {
       toast.error(error.response.data.message);
     }
@@ -116,56 +112,10 @@ export const useAuthStore = create((set, get) => ({
     socket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
     });
-
-    socket.on("incoming-call", ({ from, roomId, peerId }) => {
-      console.log(`[AuthStore] Incoming call from ${from} in room ${roomId}`);
-
-      window.confirm("Incoming call. Join?") &&
-        window.location.assign(`/video-call?roomId=${roomId}`);
-    });
   },
 
   disconnectSocket: () => {
     if (get().socket?.connected) get().socket.disconnect();
   },
 
-  initPeer: () => {
-    console.log("[PeerJS] Initializing peer...");
-
-    const peer = new Peer(undefined, {
-      host: "/",
-      port: "8001",
-      path: "/peerjs",
-    });
-
-    peer.on("open", (id) => {
-      console.log(`[PeerJS] Connection opened with ID: ${id}`);
-      set({ peerId: id });
-    });
-
-    peer.on("error", (err) => {
-      console.error("[PeerJS] Error:", err);
-    });
-
-    peer.on("disconnected", () => {
-      console.warn("[PeerJS] Disconnected");
-    });
-
-    peer.on("close", () => {
-      console.log("[PeerJS] Connection closed");
-    });
-
-    set({ peer: peer });
-  },
-
-  disconnectPeer: () => {
-    const { peer } = get();
-    if (peer) {
-      console.log("[PeerJS] Destroying peer connection...");
-      peer.destroy();
-    } else {
-      console.log("[PeerJS] No active peer to destroy.");
-    }
-    set({ peer: null });
-  },
 }));

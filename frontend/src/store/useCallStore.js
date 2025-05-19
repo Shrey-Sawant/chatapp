@@ -1,128 +1,135 @@
 import { create } from "zustand";
+import { axiosInstance } from "../lib/axios.js";
 import { useAuthStore } from "./useAuthStore";
-
-const getAuthStore = useAuthStore.getState;
+import Peer from "simple-peer";
 
 export const useCallStore = create((set, get) => ({
-  localStream: null,
-  remoteStreams: {},
-  peers: {},
+  // const socket = useAuthStore.getState().socket;
+  peer: null,
+  peerId: null,
+  stream: null,
+  myVideoRef: null,
+  userVideoRef: null,
+  call: {},
+  callSignal: null,
+  callerName: "",
+  callAccepted: false,
+  callEnded: false,
 
-  startRoomCall: async (roomId) => {
-    const { socket, peer, authUser } = getAuthStore();
+  initVideoRefs: (myRef, userRef) => {
+    set({ myVideoRef: myRef, userVideoRef: userRef });
+  },
 
-    console.log("[CallStore] Starting room call...");
-    console.log(`[CallStore] Room ID: ${roomId}`);
-    console.log(`[CallStore] Peer ID: ${peer?.id}`);
-    console.log(`[CallStore] Auth User ID: ${authUser?._id}`);
-
+  getMediaStream: async () => {
     try {
-      const localStream = await navigator.mediaDevices.getUserMedia({
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       });
-      console.log("[CallStore] Local stream acquired.");
-      set({ localStream });
-
-      socket.emit("join-room", { roomId, peerId: peer.id });
-      console.log("[CallStore] Emitted join-room event.");
-
-      socket.on("user-joined", (remotePeerId) => {
-        console.log(`[CallStore] New user joined: ${remotePeerId}`);
-
-        if (get().peers[remotePeerId]) {
-          console.log(`[CallStore] Already connected to ${remotePeerId}`);
-          return;
-        }
-
-        const call = peer.call(remotePeerId, localStream);
-        console.log(`[CallStore] Calling ${remotePeerId}...`);
-
-        call.on("stream", (remoteStream) => {
-          console.log(`[CallStore] Receiving stream from ${remotePeerId}`);
-          set((state) => ({
-            remoteStreams: {
-              ...state.remoteStreams,
-              [remotePeerId]: remoteStream,
-            },
-          }));
-        });
-
-        set((state) => ({
-          peers: { ...state.peers, [remotePeerId]: call },
-        }));
-      });
-
-      peer.on("call", (call) => {
-        console.log(`[CallStore] Incoming call from ${call.peer}`);
-        call.answer(localStream);
-        console.log(`[CallStore] Answered call from ${call.peer}`);
-
-        call.on("stream", (remoteStream) => {
-          console.log(`[CallStore] Receiving stream from ${call.peer}`);
-          set((state) => ({
-            remoteStreams: {
-              ...state.remoteStreams,
-              [call.peer]: remoteStream,
-            },
-          }));
-        });
-
-        set((state) => ({
-          peers: { ...state.peers, [call.peer]: call },
-        }));
-      });
-
-      socket.on("user-left", (peerId) => {
-        console.log(`[CallStore] User left: ${peerId}`);
-        if (get().peers[peerId]) {
-          get().peers[peerId].close();
-          const updatedPeers = { ...get().peers };
-          const updatedStreams = { ...get().remoteStreams };
-          delete updatedPeers[peerId];
-          delete updatedStreams[peerId];
-
-          set({ peers: updatedPeers, remoteStreams: updatedStreams });
-          console.log(`[CallStore] Closed call with ${peerId}`);
-        }
-      });
+      set({ stream });
+      if (get().myVideoRef) {
+        get().myVideoRef.current.srcObject = stream;
+      }
     } catch (error) {
-      console.error("[CallStore] Error starting room call:", error);
+      console.error("Error accessing media devices.", error);
     }
   },
 
-  initiateCall: (calleeUserId, roomId) => {
-    const { socket, authUser, peerId } = useAuthStore.getState();
+  initCallListners: () => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket) return;
 
-    if (!socket || !authUser || !peerId) return;
+    socket.on("me", (id) => {
+      set({ peerId: id });
+    });
 
-    console.log(`[CallStore] Initiating call to ${calleeUserId}`);
+    socket.on("callUser", ({ from, name, signal }) => {
+      set({
+        call: {
+          isReceivedCall: true,
+          from,
+          callerName: name,
+          callSignal: signal,
+        },
+      });
+    });
 
-    // Notify callee
-    socket.emit("call-user", {
-      to: calleeUserId,
-      from: authUser._id,
-      roomId,
-      peerId,
+    socket.on("callAccepted", (signal) => {
+      set({ callAccepted: true });
+      get().peer?.signal(signal);
     });
   },
 
-  endRoomCall: () => {
-    console.log("[CallStore] Ending room call...");
+  answerCall: () => {
+    const { call, callSignal, userVideoRef } = get();
+    const socket = useAuthStore.getState().socket;
+    set({ callAccepted: true });
 
-    Object.values(get().peers).forEach((call) => {
-      console.log(`[CallStore] Closing call with ${call.peer}`);
-      call.close();
+    const peer = new Peer({
+      initiator: false,
+      trickle: false,
+      stream: get().stream,
     });
 
-    get()
-      .localStream?.getTracks()
-      .forEach((track) => {
-        console.log(`[CallStore] Stopping local track: ${track.kind}`);
-        track.stop();
-      });
+    peer.on("signal", (data) => {
+      socket.emit("answerCall", { signal: data, to: get().call.from });
+    });
 
-    set({ localStream: null, remoteStreams: {}, peers: {} });
-    console.log("[CallStore] Cleared all streams and peer connections.");
+    peer.on("stream", (currentStream) => {
+      userVideoRef.current.srcObject = currentStream;
+    });
+
+    peer.signal(callSignal);
+
+    set({ peer });
+  },
+
+  callUser: (userId, callerName) => {
+    const { stream, userVideoRef, peerId } = get();
+    const socket = useAuthStore.getState().socket;
+
+    const peer = new Peer({
+      initiator: true,
+      trickle: false,
+      stream,
+    });
+
+    peer.on("signal", (data) => {
+      socket.emit("callUser", {
+        userToCall: userId,
+        signalData: data,
+        from: peerId,
+        name: callerName,
+      });
+    });
+
+    peer.on("stream", (remoteStream) => {
+      if (userVideoRef) {
+        userVideoRef.current.srcObject = remoteStream;
+      }
+    });
+
+    socket.on("callAccepted", (signal) => {
+      set({ callAccepted: true });
+      peer.signal(signal);
+    });
+
+    set({ peer });
+  },
+
+  leaveCall: () => {
+    get().peer?.destroy();
+
+    set({
+      callEnded: true,
+      callAccepted: false,
+      call: {},
+      callSignal: null,
+      callerName: "",
+      peer: null,
+      stream: null,
+    });
+
+    window.location.reload();
   },
 }));

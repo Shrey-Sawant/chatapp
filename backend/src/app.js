@@ -21,11 +21,6 @@ const io = new Server(server, {
   },
 });
 
-const peerServer = ExpressPeerServer(server, {
-  debug: true,
-  path: "/",
-});
-
 const userSocketMap = {};
 
 export function getReceiverSocketId(userId) {
@@ -40,40 +35,20 @@ io.on("connection", (socket) => {
 
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-  socket.on("joinRoom", ({ roomId, peerId }) => {
-    socket.join(roomId);
-
-    if (!roomMembers[roomId]) {
-      roomMembers[roomId] = new Set();
-    }
-    roomMembers[roomId].add(peerId);
-
-    socket.to(roomId).emit("userJoined", peerId);
-
-    socket.on("disconnect", () => {
-      if (userId) delete userSocketMap[userId];
-      io.emit("getOnlineUsers", Object.keys(userSocketMap));
-
-      if (roomMembers[roomId]) {
-        roomMembers[roomId].delete(peerId);
-        socket.to(roomId).emit("userLeft", peerId);
-        if (roomMembers[roomId].size === 0) {
-          delete roomMembers[roomId];
-        }
-      }
-    });
+  socket.emit("me", socket.id);
+  
+  socket.on("disconnect", () => {
+    if (userId) delete userSocketMap[userId];
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 
-  socket.on("call-user", ({ to, from, roomId, peerId }) => {
-  const receiverSocketId = userSocketMap[to];
-  if (receiverSocketId) {
-    io.to(receiverSocketId).emit("incoming-call", {
-      from,
-      roomId,
-      peerId,
-    });
-  }
-});
+  socket.on("callUser",({userToCall, signalData, from, name})=>{
+      io.to(userToCall).emit("callUser",{signal:signalData, from, name});
+  });
+
+  socket.on("answerCall",(data)=>{
+    io.to(data.to).emit("Call Accepted",data.signal);
+  });
 });
 
 app.use(
@@ -84,7 +59,6 @@ app.use(
   })
 );
 
-app.use("/peerjs", peerServer);
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));

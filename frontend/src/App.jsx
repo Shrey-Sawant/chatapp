@@ -7,7 +7,6 @@ import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
-import VideoCallContainer from './components/VideoCallContainer';
 
 import { useAuthStore } from './store/useAuthStore';
 import { Loader } from 'lucide-react';
@@ -43,8 +42,6 @@ const App = () => {
         <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
-        <Route path="/video-call" element={authUser ? <VideoCallContainer /> : <Navigate to="/login" />} />
-
       </Routes>
 
       <Toaster />
