@@ -1,15 +1,13 @@
-import React from "react";
-import VideoPlayer from "./VideoPlayer";
-import Notification from "./Notification";
+import { useAuthStore } from "../store/useAuthStore";
+import { useCallStore } from "../store/useCallStore";
+import { useEffect, useRef } from "react";
 
 const VideoCallContainer = () => {
+
   return (
-    <div>
-      <VideoPlayer />
-      <Options>
-        <Notification />
-      </Options>
-    </div>
+    <>
+    
+    </>
   );
 };
 

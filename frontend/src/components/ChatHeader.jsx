@@ -33,9 +33,9 @@ const ChatHeader = () => {
                 
                 <div className='flex items-center gap-5'>
                 {/* Video Call Button */}
-                <button className='btn btn-ghost btn-circle' onClick={() =>{initiateCall(selectedUser._id, selectedUser.roomId); navigate("/video-call")}}> 
+                {/* <button className='btn btn-ghost btn-circle' onClick={() =>{ navigate("/video-call")}}> 
                     <VideoIcon className='w-5 h-5' />
-                </button>
+                </button> */}
                 {/* Close Button */}
                 <button onClick={() => setSelectedUser(null)}>
                     <X />
