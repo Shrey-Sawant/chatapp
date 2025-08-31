@@ -24,14 +24,14 @@ const App = () => {
     checkAuth();
   }, [checkAuth]);
 
-  if (isCheckingAuth && !authUser) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-base-100 text-base-content">
-        <Loader className="size-10 animate-spin text-primary" />
-        <p className="mt-2 text-base-content/70">Checking authentication...</p>
-      </div>
-    );
-  }
+  // if (isCheckingAuth && !authUser) {
+  //   return (
+  //     <div className="flex flex-col items-center justify-center h-screen bg-base-100 text-base-content">
+  //       <Loader className="size-10 animate-spin text-primary" />
+  //       <p className="mt-2 text-base-content/70">Checking authentication...</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div data-theme={theme}>
