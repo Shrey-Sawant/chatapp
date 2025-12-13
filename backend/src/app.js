@@ -36,24 +36,24 @@ io.on("connection", (socket) => {
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.emit("me", socket.id);
-  
+
   socket.on("disconnect", () => {
     if (userId) delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 
-  socket.on("callUser",({userToCall, signalData, from, name})=>{
-      io.to(userToCall).emit("callUser",{signal:signalData, from, name});
+  socket.on("callUser", ({ userToCall, signalData, from, name }) => {
+    io.to(userToCall).emit("callUser", { signal: signalData, from, name });
   });
 
-  socket.on("answerCall",(data)=>{
-    io.to(data.to).emit("Call Accepted",data.signal);
+  socket.on("answerCall", (data) => {
+    io.to(data.to).emit("Call Accepted", data.signal);
   });
 });
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: [process.env.CLIENT_URL, "*"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
