@@ -13,12 +13,6 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.CLIENT_URL,
-];
-
-
 const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL,
@@ -57,15 +51,9 @@ io.on("connection", (socket) => {
   });
 });
 
-
-app.use((req, res, next) => {
-  console.log("CLIENT_URL =", JSON.stringify(process.env.CLIENT_URL)),
-  next();
-});
-
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: process.env.CLIENT_URL,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
