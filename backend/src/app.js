@@ -63,7 +63,10 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 app.set("trust proxy", 1);
-
+app.use((req, res, next) => {
+  console.log("ORIGIN:", req.headers.origin);
+  next();
+});
 app.use("/api/auth", authRouter);
 app.use("/api/messages", messageRouter);
 
