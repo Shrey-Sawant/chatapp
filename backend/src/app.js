@@ -58,6 +58,8 @@ io.on("connection", (socket) => {
 });
 
 app.use(
+  console.log("CLIENT_URL =", JSON.stringify(process.env.CLIENT_URL));
+
   cors({
     origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
