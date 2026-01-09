@@ -6,17 +6,14 @@ import { ApiError } from "../utils/ApiError.js";
 export const verifyJWT = asyncHandler(async (req, _, next) => {
 
     try {
-        // Token extraction
         const token = req.cookies?.jwt || req.header("Authorization")?.replace("Bearer ", "");
 
         if (!token) {
             return next(new ApiError(401, "Unauthorized request. Please check your permissions or log in again."));
         }
 
-        // Token verification
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+        const decodedToken = jwt.verify(token, "shreyasawant0107nosfaratu@$homful$%ewn42");
 
-        // User lookup
         const user = await User.findById(decodedToken?.userId).select("-password -refreshToken");
 
         if (!user) {
