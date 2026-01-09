@@ -15,7 +15,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://chatapp-kohl-kappa.vercel.app",
+    origin: provess.env.CLIENT_URL,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
@@ -53,7 +53,7 @@ io.on("connection", (socket) => {
 
 app.use(
   cors({
-    origin: "https://chatapp-kohl-kappa.vercel.app",
+    origin: process.env.CLIENT_URL,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })

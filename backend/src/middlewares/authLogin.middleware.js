@@ -12,7 +12,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
             return next(new ApiError(401, "Unauthorized request. Please check your permissions or log in again."));
         }
 
-        const decodedToken = jwt.verify(token, "shreyasawant0107nosfaratu@$homful$%ewn42");
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
         const user = await User.findById(decodedToken?.userId).select("-password -refreshToken");
 
