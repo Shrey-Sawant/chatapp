@@ -7,12 +7,23 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { getReceiverSocketId, io } from "../app.js";
 
 const getUserForSideBar = asyncHandler(async (req, res) => {
-    const loogedInUserId = req.user?._id;
-    const filterUsers = await User.find({ _id: { $ne: loogedInUserId } }).select('-password');
+    const loggedInUserId = req.user?._id;
 
-    if (!filterUsers) return next(new ApiError(404, 'No users found'));
+    const currentUser = await User.findById(loggedInUserId)
+        .populate({
+            path: "friends",
+            select: "-password", 
+        });
 
-    return res.status(200).json(new ApiResponse(200, filterUsers, 'Users fetched successfully'));
+    if (!currentUser) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const friendsList = currentUser.friends;
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, friendsList, "Friends fetched successfully"));
 });
 
 const getMessages = asyncHandler(async (req, res) => {
@@ -41,7 +52,6 @@ const sendMessage = asyncHandler(async (req, res, next) => {
 
     let imagesPaths = [];
 
-    // File handling debug
     if (req.files?.pictures) {
         const files = Array.isArray(req.files.pictures) 
             ? req.files.pictures 
@@ -55,12 +65,10 @@ const sendMessage = asyncHandler(async (req, res, next) => {
         });
     }
 
-    // Validation check
     if (!text && imagesPaths.length === 0) {
         return next(new ApiError(400, "Message must contain text or an image"));
     }
 
-    // Cloudinary upload debug
     let images = [];
     if (imagesPaths.length > 0) {
         console.log("\n[Cloudinary Upload]");
@@ -79,7 +87,6 @@ const sendMessage = asyncHandler(async (req, res, next) => {
         }
     }
 
-    // Database operation debug
     try {
         const newMessage = await Message.create({
             senderId,
@@ -88,7 +95,6 @@ const sendMessage = asyncHandler(async (req, res, next) => {
             images
         });
 
-        // Socket.io debug
         const receiverSocketId = getReceiverSocketId(receiverId);
         if (receiverSocketId) {
             io.to(receiverSocketId).emit("newMessage", newMessage);

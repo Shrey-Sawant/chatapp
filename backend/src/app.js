@@ -4,9 +4,10 @@ import cookieParser from "cookie-parser";
 import { Server } from "socket.io";
 import http from "http";
 import dotenv from "dotenv";
-import { ExpressPeerServer } from "peer";
 import authRouter from "./routes/auth.routes.js";
 import messageRouter from "./routes/message.routes.js";
+import friendRequestRouter from "./routes/freindReq.routes.js";
+import { User } from "./models/user.model.js";
 
 dotenv.config();
 
@@ -29,11 +30,29 @@ export function getReceiverSocketId(userId) {
 
 const roomMembers = {};
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   const userId = socket.handshake.query.userId;
-  if (userId) userSocketMap[userId] = socket.id;
+  if (!userId || userId === "undefined") return socket.disconnect();
+
+  userSocketMap[userId] = socket.id;
+
+  const user = await User.findById(userId).populate("friends", "_id");
 
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+  socket.on("disconnect", async () => {
+    delete userSocketMap[userId];
+
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  });
+
+  socket.on("typing", ({ receiverId }) => {
+    if (friendIds.includes(receiverId)) {
+      const receiverSocketId = getReceiverSocketId(receiverId);
+      if (receiverSocketId)
+        io.to(receiverSocketId).emit("displayTyping", userId);
+    }
+  });
 
   socket.emit("me", socket.id);
 
@@ -67,5 +86,6 @@ app.set("trust proxy", 1);
 
 app.use("/api/auth", authRouter);
 app.use("/api/messages", messageRouter);
+app.use("/api/friends", friendRequestRouter);
 
 export { io, app, server };
